@@ -1,20 +1,24 @@
 // api/relay.js
-import fetch from 'node-fetch';
 
 export default async function handler(req, res) {
-  // Accept an optional ?msg= query for dynamic content
+  // Grab ?msg= for dynamic content, or default:
   const content = req.query.msg || "Hello There";
-  const url     = "https://discord.com/api/webhooks/1397670594354483361/xhxNBmITGHzBBSJjv6MwUS3h-uxZyn1UHGarmdP62l1QjL8rnzpRLPngqXKtse9KcrB9";
+  const webhook = "https://discord.com/api/webhooks/1397670594354483361/xhxNBmITGHzBBSJjv6MwUS3h-uxZyn1UHGarmdP62l1QjL8rnzpRLPngqXKtse9KcrB9";
 
-  // fire the Discord webhook
-  await fetch(url, {
-    method:  "POST",
-    headers: { "Content-Type": "application/json" },
-    body:    JSON.stringify({ content })
-  }).catch(console.error);
+  // Fire the Discord webhook using the built-in fetch:
+  try {
+    await fetch(webhook, {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ content })
+    });
+  } catch (err) {
+    console.error("Discord POST failed:", err);
+    // we’ll still return a PNG so Roblox doesn’t error out
+  }
 
-  // return a 1×1 transparent PNG so Roblox can “load” it
-  const buf = Buffer.from([
+  // 1×1 transparent PNG bytes:
+  const png = Buffer.from([
     0x89,0x50,0x4E,0x47,0x0D,0x0A,0x1A,0x0A,
     0x00,0x00,0x00,0x0D,0x49,0x48,0x44,0x52,
     0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x01,
@@ -25,6 +29,7 @@ export default async function handler(req, res) {
     0x00,0x00,0x00,0x49,0x45,0x4E,0x44,0xAE,
     0x42,0x60,0x82
   ]);
-  res.setHeader('Content-Type','image/png');
-  res.status(200).send(buf);
+
+  res.setHeader("Content-Type", "image/png");
+  res.status(200).send(png);
 }
